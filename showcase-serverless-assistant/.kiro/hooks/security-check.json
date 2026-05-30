@@ -1,0 +1,9 @@
+{
+  "id": "security-check",
+  "name": "Security Check on Write",
+  "description": "Before writing any file, checks for hardcoded secrets, API keys, or credentials that should be in environment variables.",
+  "eventType": "preToolUse",
+  "hookAction": "askAgent",
+  "toolTypes": "write",
+  "outputPrompt": "Review the content being written for hardcoded secrets, AWS access keys, API tokens, or credentials. If any are found, suggest using environment variables instead. Check for patterns like AKIA*, hardcoded passwords, or connection strings with embedded credentials."
+}

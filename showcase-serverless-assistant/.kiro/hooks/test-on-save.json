@@ -1,0 +1,10 @@
+{
+  "id": "test-on-save",
+  "name": "Run Tests on Save",
+  "description": "Automatically runs pytest when any Python file is saved, ensuring tests stay green during development.",
+  "eventType": "fileEdited",
+  "hookAction": "runCommand",
+  "filePatterns": "**/*.py",
+  "command": "pytest tests/ -x --tb=short",
+  "timeout": 60
+}

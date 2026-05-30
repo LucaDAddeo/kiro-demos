@@ -1,0 +1,20 @@
+# SAM CLI configuration for demo-agents deployment
+# Replace placeholder values with your actual configuration
+
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "demo-agents-stack"
+resolve_s3 = true
+s3_prefix = "demo-agents"
+region = "us-east-1"
+profile = "your-profile-name"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "Environment=dev"
+
+[default.build.parameters]
+use_container = false
+
+[default.local_invoke.parameters]
+env_vars = "../.env.example"

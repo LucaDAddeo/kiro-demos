@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  demo-agents infrastructure — SAM template for Bedrock Agent action group
+  Lambda function and associated IAM roles.
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+    MemorySize: 256
+    Environment:
+      Variables:
+        AWS_ACCOUNT_ID: '123456789012'
+        REGION: !Ref AWS::Region
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+Resources:
+  # Lambda function for Bedrock Agent action group
+  ActionGroupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'demo-agents-action-group-${Environment}'
+      Handler: action_group.lambda_handler
+      CodeUri: ../bedrock-agent/
+      Description: Handles Bedrock Agent action group requests (AnalyzeCosts, ListResources)
+      Role: !GetAtt ActionGroupFunctionRole.Arn
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+
+  # IAM role for the action group Lambda
+  ActionGroupFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'demo-agents-action-group-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CostExplorerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ce:GetCostAndUsage
+                  - ce:GetCostForecast
+                Resource: '*'
+        - PolicyName: ResourceGroupsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - resource-groups:ListGroups
+                  - resource-groups:ListGroupResources
+                  - tag:GetResources
+                Resource: '*'
+
+  # Bedrock Agent execution role
+  BedrockAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'demo-agents-bedrock-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: '123456789012'
+      Policies:
+        - PolicyName: BedrockAgentPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt ActionGroupFunction.Arn
+
+Outputs:
+  ActionGroupFunctionArn:
+    Description: ARN of the action group Lambda function
+    Value: !GetAtt ActionGroupFunction.Arn
+
+  BedrockAgentRoleArn:
+    Description: ARN of the Bedrock Agent execution role
+    Value: !GetAtt BedrockAgentRole.Arn
+
+  ActionGroupFunctionName:
+    Description: Name of the action group Lambda function
+    Value: !Ref ActionGroupFunction

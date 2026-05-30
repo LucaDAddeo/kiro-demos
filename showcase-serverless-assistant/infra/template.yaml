@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless AI Assistant — API Gateway + Lambda + DynamoDB + Bedrock.
+  Demonstrates Kiro spec-driven development with hooks and steering.
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref ConversationsTable
+        MODEL_ID: us.anthropic.claude-sonnet-4-20250514
+        AWS_ACCOUNT_ID: '123456789012'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+Resources:
+  # API Gateway HTTP API
+  AssistantApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+
+  # Lambda: Chat endpoint
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'assistant-chat-${Environment}'
+      Handler: src.handlers.chat_handler.lambda_handler
+      CodeUri: ../
+      Description: Handles POST /chat — receives messages and generates AI responses
+      Role: !GetAtt ChatFunctionRole.Arn
+      Events:
+        ChatPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssistantApi
+            Path: /chat
+            Method: POST
+
+  # Lambda: History endpoint
+  HistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'assistant-history-${Environment}'
+      Handler: src.handlers.history_handler.lambda_handler
+      CodeUri: ../
+      Description: Handles GET /history/{session_id} — retrieves conversation history
+      Role: !GetAtt HistoryFunctionRole.Arn
+      Events:
+        HistoryGet:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssistantApi
+            Path: /history/{session_id}
+            Method: GET
+
+  # DynamoDB Table for conversation storage
+  ConversationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'assistant-conversations-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: session_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: session_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+
+  # IAM Role for Chat Lambda
+  ChatFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'assistant-chat-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                Resource:
+                  - !GetAtt ConversationsTable.Arn
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - arn:aws:bedrock:us-east-1::foundation-model/us.anthropic.claude-sonnet-4-20250514
+
+  # IAM Role for History Lambda
+  HistoryFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'assistant-history-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBReadAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                Resource:
+                  - !GetAtt ConversationsTable.Arn
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${AssistantApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+
+  ChatFunctionArn:
+    Description: ARN of the Chat Lambda function
+    Value: !GetAtt ChatFunction.Arn
+
+  HistoryFunctionArn:
+    Description: ARN of the History Lambda function
+    Value: !GetAtt HistoryFunction.Arn
+
+  ConversationsTableName:
+    Description: Name of the DynamoDB conversations table
+    Value: !Ref ConversationsTable

@@ -1,0 +1,24 @@
+[project]
+name = "showcase-serverless-assistant"
+version = "1.0.0"
+description = "Serverless AI Assistant — Kiro end-to-end showcase with specs, hooks, and steering"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+dependencies = [
+    "boto3==1.38.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "moto==5.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"

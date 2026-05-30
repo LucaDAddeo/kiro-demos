@@ -1,0 +1,40 @@
+# SAM deployment configuration
+# Replace placeholder values with your actual AWS configuration
+
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "serverless-assistant-dev"
+resolve_s3 = true
+s3_prefix = "serverless-assistant"
+region = "us-east-1"
+profile = "your-profile-name"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "Environment=dev"
+
+[default.build.parameters]
+use_container = false
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[staging.deploy.parameters]
+stack_name = "serverless-assistant-staging"
+resolve_s3 = true
+s3_prefix = "serverless-assistant"
+region = "us-east-1"
+profile = "your-profile-name"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "Environment=staging"
+
+[prod.deploy.parameters]
+stack_name = "serverless-assistant-prod"
+resolve_s3 = true
+s3_prefix = "serverless-assistant"
+region = "us-east-1"
+profile = "your-profile-name"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "Environment=prod"

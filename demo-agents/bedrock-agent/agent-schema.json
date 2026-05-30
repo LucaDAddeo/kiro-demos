@@ -1,0 +1,146 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Cloud Operations Agent API",
+    "version": "1.0.0",
+    "description": "Action group API for the Cloud Operations Bedrock Agent. Provides cost analysis and resource listing capabilities."
+  },
+  "paths": {
+    "/analyze-costs": {
+      "post": {
+        "operationId": "AnalyzeCosts",
+        "summary": "Analyze AWS costs for the account",
+        "description": "Returns a cost breakdown by service with optimization recommendations for the specified region and time period.",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "description": "AWS region to analyze costs for",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "us-east-1"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days to include in the cost analysis",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 1,
+              "maximum": 90
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cost analysis results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "region": {
+                      "type": "string",
+                      "description": "AWS region analyzed"
+                    },
+                    "period_days": {
+                      "type": "integer",
+                      "description": "Number of days in the analysis period"
+                    },
+                    "total_cost_usd": {
+                      "type": "number",
+                      "description": "Total cost in USD"
+                    },
+                    "top_services": {
+                      "type": "array",
+                      "description": "Top spending services",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "service": { "type": "string" },
+                          "cost_usd": { "type": "number" },
+                          "percentage": { "type": "number" }
+                        }
+                      }
+                    },
+                    "recommendations": {
+                      "type": "array",
+                      "description": "Cost optimization recommendations",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/list-resources": {
+      "get": {
+        "operationId": "ListResources",
+        "summary": "List active AWS resources",
+        "description": "Returns a list of active AWS resources in the specified region, optionally filtered by service.",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "description": "AWS region to list resources from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "us-east-1"
+            }
+          },
+          {
+            "name": "service",
+            "in": "query",
+            "description": "Filter resources by AWS service name (e.g., Lambda, S3, DynamoDB)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "region": {
+                      "type": "string",
+                      "description": "AWS region queried"
+                    },
+                    "resource_count": {
+                      "type": "integer",
+                      "description": "Total number of resources returned"
+                    },
+                    "resources": {
+                      "type": "array",
+                      "description": "List of resources",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "service": { "type": "string" },
+                          "name": { "type": "string" },
+                          "arn": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

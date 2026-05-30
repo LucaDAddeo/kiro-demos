@@ -1,0 +1,61 @@
+# AgentCore Deployment Configuration
+# Defines the agent runtime, model, tools, and memory settings
+# for deployment via Amazon Bedrock AgentCore.
+
+agent:
+  name: cloud-ops-agent
+  description: >
+    Cloud operations agent that analyzes AWS costs and manages resources.
+    Integrates with cloud-ops-toolkit for operational automation.
+  
+  # Model configuration
+  model:
+    provider: bedrock
+    model_id: us.anthropic.claude-sonnet-4-20250514
+    inference_config:
+      max_tokens: 4096
+      temperature: 0.1
+      top_p: 0.9
+
+  # System prompt
+  instruction: |
+    You are a cloud operations assistant. You help users analyze AWS costs,
+    list resources, and provide optimization recommendations.
+    
+    When analyzing costs, always provide:
+    1. A breakdown by service
+    2. Month-over-month trends
+    3. Actionable optimization suggestions
+    
+    When listing resources, organize them by service and include their ARNs.
+
+  # Tools available to the agent
+  tools:
+    - name: analyze_costs
+      description: Analyze AWS costs for a given region and time period
+      type: action_group
+      action_group_name: CloudOpsActionGroup
+    - name: list_resources
+      description: List active AWS resources in a region
+      type: action_group
+      action_group_name: CloudOpsActionGroup
+
+  # Memory configuration
+  memory:
+    type: session
+    session_ttl_seconds: 3600
+    max_tokens: 8192
+
+  # Guardrails
+  guardrails:
+    - no_real_credentials
+    - no_destructive_actions
+
+# Deployment settings
+deployment:
+  runtime: python3.11
+  timeout_seconds: 300
+  memory_mb: 512
+  environment:
+    AWS_REGION: us-east-1
+    TOOLKIT_PATH: /opt/cloud-ops-toolkit
