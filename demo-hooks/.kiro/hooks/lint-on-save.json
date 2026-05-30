@@ -1,0 +1,9 @@
+{
+  "id": "lint-on-save",
+  "name": "Lint on Save",
+  "description": "Automatically runs ESLint with auto-fix on TypeScript files when they are saved, ensuring consistent code style.",
+  "eventType": "fileEdited",
+  "hookAction": "runCommand",
+  "filePatterns": "**/*.ts",
+  "command": "npx eslint --fix {file}"
+}

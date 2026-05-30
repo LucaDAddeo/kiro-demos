@@ -1,0 +1,9 @@
+{
+  "id": "validate-write",
+  "name": "Validate Write Operations",
+  "description": "Intercepts write tool operations before execution to verify they follow project coding standards and conventions.",
+  "eventType": "preToolUse",
+  "hookAction": "askAgent",
+  "toolTypes": "write",
+  "outputPrompt": "Verify this write operation follows our coding standards: consistent naming conventions, proper error handling, no hardcoded secrets, and appropriate documentation. Flag any concerns before proceeding."
+}

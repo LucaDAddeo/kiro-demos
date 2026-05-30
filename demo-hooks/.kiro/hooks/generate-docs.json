@@ -1,0 +1,8 @@
+{
+  "id": "generate-docs",
+  "name": "Generate Documentation",
+  "description": "Manually triggered hook that runs the documentation generation script to update project docs from source code.",
+  "eventType": "userTriggered",
+  "hookAction": "runCommand",
+  "command": "python scripts/generate-docs.py"
+}

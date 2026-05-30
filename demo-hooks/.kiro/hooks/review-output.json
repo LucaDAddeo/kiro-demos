@@ -1,0 +1,9 @@
+{
+  "id": "review-output",
+  "name": "Review Tool Output",
+  "description": "Reviews the result of write operations after execution to catch potential issues, suggest improvements, and ensure quality.",
+  "eventType": "postToolUse",
+  "hookAction": "askAgent",
+  "toolTypes": "write",
+  "outputPrompt": "Review the tool execution result for potential issues: check for introduced bugs, missing error handling, security concerns, or deviations from the project architecture. Suggest improvements if needed."
+}

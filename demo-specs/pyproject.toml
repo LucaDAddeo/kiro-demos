@@ -1,0 +1,16 @@
+[project]
+name = "url-shortener"
+version = "0.1.0"
+description = "A local CLI URL shortener demonstrating Kiro spec-driven development"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[project.scripts]
+url-shortener = "src.url_shortener:main"
+
+[build-system]
+requires = ["setuptools>=70.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
